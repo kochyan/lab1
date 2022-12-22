@@ -1,6 +1,6 @@
-package ru.sstu;
+package ru.sstu.lab1;
 
-public class DummyRunnableUtils {
+public class RunnableUtils {
     public static Runnable newSleepMillisTask(final long value) {
         return () -> {
             try {

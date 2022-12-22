@@ -1,7 +1,7 @@
 /*
  Put header here
  */
-package ru.sstu;
+package ru.sstu.lab1;
 
 
 import java.util.ArrayList;
@@ -11,7 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public class Main {
+public class Lab1Starter {
     public static void main(String[] args) throws InterruptedException {
         System.out.println("\nЗадание 1 - однопоточная обработка");
         task1(1000, 1, 5);
@@ -38,7 +38,7 @@ public class Main {
             ExecutorService executorService = new ThreadPoolExecutor(threadsCount, threadsCount, 1L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(elementsCount));
             long timeBefore = System.currentTimeMillis();
             for (int j = 0; j < list.size(); j++) {
-                executorService.submit(DummyRunnableUtils.newSleepMillisTask(1L));
+                executorService.submit(RunnableUtils.newSleepMillisTask(1L));
             }
             executorService.shutdown();
             boolean isSuccess = executorService.awaitTermination(1L, TimeUnit.MINUTES);
@@ -69,7 +69,7 @@ public class Main {
                 if (j == lastCurrentRangeIndex) {
                     if (rangeNumber < threadsCount) {
                         //System.out.println("\t\t\tВ диапазоне #" + rangeNumber + " " + elementsToHandle + " элементов");
-                        executorService.submit(DummyRunnableUtils.newSleepMillisTask(elementsToHandle * 1L));
+                        executorService.submit(RunnableUtils.newSleepMillisTask(elementsToHandle * 1L));
                         rangeNumber++;
                         lastCurrentRangeIndex = rangeSize * rangeNumber;
                         elementsToHandle = 0;
@@ -77,7 +77,7 @@ public class Main {
                     if (rangeNumber == threadsCount) {
                         if (lastCurrentRangeIndex == (list.size() - 1) && elementsToHandle > 0) {
                             //System.out.println("\t\t\tВ диапазоне #" + rangeNumber + " " + elementsToHandle + " элементов");
-                            executorService.submit(DummyRunnableUtils.newSleepMillisTask(elementsToHandle * 1L));
+                            executorService.submit(RunnableUtils.newSleepMillisTask(elementsToHandle * 1L));
                         } else {
                             lastCurrentRangeIndex = list.size() - 1;
                         }
@@ -117,7 +117,7 @@ public class Main {
                 if (j == lastCurrentRangeIndex) {
                     if (rangeNumber < threadsCount) {
                         //System.out.println("\t\t\tВ диапазоне #" + rangeNumber + " " + elementsToHandle + " элементов");
-                        executorService.submit(DummyRunnableUtils.newSleepMillisTask(elementsToHandle * 3L));
+                        executorService.submit(RunnableUtils.newSleepMillisTask(elementsToHandle * 3L));
                         rangeNumber++;
                         lastCurrentRangeIndex = rangeSize * rangeNumber;
                         elementsToHandle = 0;
@@ -125,7 +125,7 @@ public class Main {
                     if (rangeNumber == threadsCount) {
                         if (lastCurrentRangeIndex == (list.size() - 1) && elementsToHandle > 0) {
                             //System.out.println("\t\t\tВ диапазоне #" + rangeNumber + " " + elementsToHandle + " элементов");
-                            executorService.submit(DummyRunnableUtils.newSleepMillisTask(elementsToHandle * 3L));
+                            executorService.submit(RunnableUtils.newSleepMillisTask(elementsToHandle * 3L));
                         } else {
                             lastCurrentRangeIndex = list.size() - 1;
                         }
@@ -161,7 +161,7 @@ public class Main {
                 if (j == lastCurrentRangeIndex) {
                     if (rangeNumber < threadsCount) {
                         //System.out.println("\t\t\tВ диапазоне #" + rangeNumber + " " + elementsToHandle + " элементов");
-                        executorService.submit(DummyRunnableUtils.newSleepMillisTask((long) (elementsToHandle * Math.sqrt(j))));
+                        executorService.submit(RunnableUtils.newSleepMillisTask((long) (elementsToHandle * Math.sqrt(j))));
                         rangeNumber++;
                         lastCurrentRangeIndex = rangeSize * rangeNumber;
                         elementsToHandle = 0;
@@ -169,7 +169,7 @@ public class Main {
                     if (rangeNumber == threadsCount) {
                         if (lastCurrentRangeIndex == (list.size() - 1) && elementsToHandle > 0) {
                             //System.out.println("\t\t\tВ диапазоне #" + rangeNumber + " " + elementsToHandle + " элементов");
-                            executorService.submit(DummyRunnableUtils.newSleepMillisTask((long) (elementsToHandle * Math.sqrt(j))));
+                            executorService.submit(RunnableUtils.newSleepMillisTask((long) (elementsToHandle * Math.sqrt(j))));
                         } else {
                             lastCurrentRangeIndex = list.size() - 1;
                         }
@@ -197,7 +197,7 @@ public class Main {
             ExecutorService executorService = new ThreadPoolExecutor(threadsCount, threadsCount, 1L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(elementsCount));
             long timeBefore = System.currentTimeMillis();
             for (int j = 0; j < list.size(); j++) {
-                executorService.submit(DummyRunnableUtils.newSleepMillisTask((long) Math.sqrt(j)));
+                executorService.submit(RunnableUtils.newSleepMillisTask((long) Math.sqrt(j)));
             }
             executorService.shutdown();
             boolean isSuccess = executorService.awaitTermination(5L, TimeUnit.MINUTES);
