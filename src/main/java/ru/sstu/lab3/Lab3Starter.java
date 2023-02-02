@@ -52,7 +52,7 @@ public class Lab3Starter {
     public static void main(String[] args) throws InterruptedException {
         //case1(producersCount1, consumersCount1);
         //case2(producersCount2, consumersCount2);
-        //case3(producersCount3, consumersCount3);
+        case3(producersCount3, consumersCount3);
     }
 
     public static void case1(int producersCount, int consumersCount) throws InterruptedException {
