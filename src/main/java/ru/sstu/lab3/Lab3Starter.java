@@ -2,6 +2,7 @@ package ru.sstu.lab3;
 
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -42,17 +43,17 @@ public class Lab3Starter {
     private final static AtomicInteger totalConsumes4 = new AtomicInteger();
     private final static int consumersCount4 = 4;
     private final static int producersCount4 = 12;
-    private final static Object write = new Object();
-    private final static Object read = new Object();
     private final static Lock writeLock = new ReentrantLock();
     private final static Lock readLock = new ReentrantLock();
+    private final static AtomicBoolean full = new AtomicBoolean(false);
     private final static BlockingQueue<Integer> buffer4 = new ArrayBlockingQueue<>(bufferSize);
 
 
     public static void main(String[] args) throws InterruptedException {
         //case1(producersCount1, consumersCount1);
         //case2(producersCount2, consumersCount2);
-        case3(producersCount3, consumersCount3);
+        //case3(producersCount3, consumersCount3);
+        case4(producersCount4, consumersCount4);
     }
 
     public static void case1(int producersCount, int consumersCount) throws InterruptedException {
@@ -250,16 +251,16 @@ public class Lab3Starter {
             }
         };
     }
-/*
+
     public static void case4(int producersCount, int consumersCount) throws InterruptedException {
         System.out.printf("4. Взаимодействие читателей и писателей при помощи lock. \t\tчитателей: [%d]\tписателей: [%d]\n", consumersCount, producersCount);
         final ExecutorService consumers = Executors.newFixedThreadPool(consumersCount);
         final ExecutorService producers = Executors.newFixedThreadPool(producersCount);
         for (int i = 0; i < producersCount; i++) {
-            producers.submit(produce41(i));
+            producers.submit(produce4(i));
         }
         for (int i = 0; i < consumersCount; i++) {
-            consumers.submit(consume41());
+            consumers.submit(consume4());
         }
         long before = System.currentTimeMillis();
         consumers.shutdown();
@@ -268,33 +269,32 @@ public class Lab3Starter {
         consumers.awaitTermination(5, TimeUnit.SECONDS);
         long after = System.currentTimeMillis();
         System.out.printf("4. Всего заняло мс: %s\n Всего успешных записей в буфер: %s, успешных чтений из буфера %s\n Потоков читателей: %s, Потоков писателей: %s",
-                (after - before - 300), totalProduces4.get(), totalConsumes4.get(), consumersCount4, producersCount4);
+                (after - before), totalProduces4.get(), totalConsumes4.get(), consumersCount4, producersCount4);
     }
 
     public static Runnable produce4(final int startIdx) {
         return () -> {
-            int currentIdx = startIdx;
-            while (currentIdx < messageCount) {
+            int totalProduced = -1;
+            while (totalProduced < messageCount) {
+                totalProduced = totalProduces4.get();
+                if (full.get()) {
+                    continue;
+                }
                 try {
-                    boolean writeLocked = writeLock.tryLock(100, TimeUnit.MILLISECONDS);
+                    boolean writeLocked = writeLock.tryLock(100L, TimeUnit.MILLISECONDS);
                     if (writeLocked) {
-                        //boolean readLocked = readLock.tryLock(100, TimeUnit.MILLISECONDS);
-                        //if (readLocked) {
-                        Integer val = messages.get(currentIdx);
-                        while (buffer4.size() == 0) {
-                            System.out.printf("produced value: [%d] by thread: [%s]\n", val, Thread.currentThread().getName());
-                            buffer4.add(val);
-
-                            totalProduces4.incrementAndGet();
-                            currentIdx += producersCount4;
+                        if (full.get()) {
+                            writeLock.unlock();
+                            continue;
                         }
-                        //readLock.unlock();
-                        //}
+                        int val = messages.get(totalProduces4.incrementAndGet());
+                        System.out.println("produced: " + val);
+                        buffer4.add(val);
+                        full.set(true);
                     }
-                } catch (Exception e) {
-                    System.out.printf("Exception in thread [%s]: %s\n", Thread.currentThread().getName(), e.getMessage());
-                } finally {
-                    System.out.printf("\tproducer-thread: [%s] finished\n", Thread.currentThread().getName());
+                } catch (InterruptedException e) {
+                    System.out.println("Exception in producer");
+                }finally {
                     writeLock.unlock();
                 }
             }
@@ -303,88 +303,34 @@ public class Lab3Starter {
 
     public static Runnable consume4() {
         return () -> {
-            try {
-                while (true) {
-                    //boolean writeLocked = writeLock.tryLock(100, TimeUnit.MILLISECONDS);
+            while (true) {
+                if (!full.get()) {
+                    if (totalProduces4.get() == messageCount) {
+                        return;
+                    }
+                    continue;
+                }
+                try {
                     boolean readLocked = readLock.tryLock(100, TimeUnit.MILLISECONDS);
                     if (readLocked) {
+                        if (!full.get()) {
+                            continue;
+                        }
                         Integer val = buffer4.poll(100, TimeUnit.MILLISECONDS);
+                        totalConsumes4.incrementAndGet();
+                        full.set(false);
                         if (val != null) {
                             System.out.printf("consumed value: [%d] by thread: [%s]\n", val, Thread.currentThread().getName());
-                            totalConsumes4.incrementAndGet();
                         } else {
                             break;
                         }
                     }
+                } catch (InterruptedException e) {
+                    System.out.println("Exception in consumer");
+                }finally {
                     readLock.unlock();
                 }
-            } catch (Exception e) {
-                System.out.printf("Exception in thread [%s]: %s\n", Thread.currentThread().getName(), e.getMessage());
-            } finally {
-                System.out.printf("\tconsumer-thread: [%s] finished\n", Thread.currentThread().getName());
-                readLock.unlock();
             }
         };
     }
-
-    public static Runnable produce41(final int startIdx) {
-        return () -> {
-            int currentIdx = startIdx;
-            synchronized (read) {
-                if (buffer4.size() == 0) {
-                    Integer val = messages.get(currentIdx);
-                    System.out.printf("produced value: [%d] by thread: [%s]\n", val, Thread.currentThread().getName());
-                    buffer4.add(val);
-                    totalProduces4.incrementAndGet();
-                    currentIdx += producersCount4;
-                    read.notify();
-                }
-            }
-            while (currentIdx < messageCount) {
-                try {
-                    synchronized (write){
-                        write.wait();
-                    }
-                    Integer val = messages.get(currentIdx);
-                    buffer4.add(val);
-                    System.out.printf("produced value: [%d] by thread: [%s]\n", val, Thread.currentThread().getName());
-                    totalProduces4.incrementAndGet();
-                    currentIdx += producersCount4;
-                    read.notify();
-                } catch (Exception e) {
-                    //System.out.printf("Exception in thread [%s]: %s\n", Thread.currentThread().getName(), e.getMessage());
-                    e.printStackTrace();
-                } finally {
-                    System.out.printf("\tproducer-thread: [%s] finished\n", Thread.currentThread().getName());
-                }
-            }
-        };
-    }
-
-    public static Runnable consume41() {
-        return () -> {
-            try {
-                while (true) {
-                    synchronized (read){
-                        read.wait();
-                    }
-                    Integer val = buffer4.poll(100, TimeUnit.MILLISECONDS);
-                    if (val != null) {
-                        System.out.printf("consumed value: [%d] by thread: [%s]\n", val, Thread.currentThread().getName());
-                        totalConsumes4.incrementAndGet();
-                        write.notify();
-                    } else {
-                        break;
-                    }
-                }
-            } catch (Exception e) {
-                System.out.printf("Exception in thread [%s]: %s\n", Thread.currentThread().getName(), e.getMessage());
-            } finally {
-                System.out.printf("\tconsumer-thread: [%s] finished\n", Thread.currentThread().getName());
-            }
-        };
-    }
-
- */
-
 }
