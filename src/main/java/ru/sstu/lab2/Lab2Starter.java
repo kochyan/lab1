@@ -3,8 +3,11 @@ package ru.sstu.lab2;
 
 public class Lab2Starter {
     public static void main(String[] args) {
-        case1(10_000);
-        case2(10_000, 10);
+        int numberCount = 100_000;
+        case1(numberCount);
+        //case2(numberCount, 2);
+        //case2(numberCount, 8);
+        //case2(numberCount, 16);
     }
 
     public static void case1(int numbers) {

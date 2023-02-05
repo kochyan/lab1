@@ -5,7 +5,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class Eratosfen {
     private boolean[] primes;
@@ -20,10 +19,7 @@ public class Eratosfen {
     public void fillSieve() {
         int to = primes.length;
         for (int i = 2; i < to; ++i) {
-            try {
-                Thread.sleep(1L);
-            } catch (InterruptedException e) {
-            }
+            addDelay(i);
             if (primes[i]) {
                 for (int j = 2; i * j < to; ++j) {
                     primes[i * j] = false;
@@ -56,16 +52,12 @@ public class Eratosfen {
 
                 long before = System.currentTimeMillis();
                 for (int i = start; i < end; ++i) {
-                    try {
-                        Thread.sleep(1L);
-                    } catch (InterruptedException e) {
-                    }
+                    addDelay(i);
                     if (primes[i]) {
                         for (int j = start; i * j < to; ++j) {
                             primes[i * j] = false;
                         }
                     }
-                    //System.out.printf("%s from:%d to:%d\n", Thread.currentThread().getName(), start, end);
                 }
                 long after = System.currentTimeMillis();
                 System.out.println(Thread.currentThread().getName() + " " + (after - before) + " мс");
@@ -94,6 +86,14 @@ public class Eratosfen {
             if (primes[i]) {
                 System.out.print(i + " ");
             }
+        }
+    }
+
+    public static void addDelay(int i) {
+        try {
+            if (i % 100 == 0)
+                Thread.sleep(1L);
+        } catch (InterruptedException e) {
         }
     }
 }
